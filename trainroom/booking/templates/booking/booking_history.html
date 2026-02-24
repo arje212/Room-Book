@@ -1,0 +1,26 @@
+{% extends "booking/base.html" %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Booking History</h1>
+<a href="?export=1" class="bg-green-600 text-white px-4 py-2 rounded">Export to Excel</a>
+<table class="table-auto w-full mt-4 border">
+  <thead>
+    <tr class="bg-gray-200">
+      <th>ID</th><th>Title</th><th>Room</th><th>Attendees</th>
+      <th>Start</th><th>End</th><th>Created By</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.title }}</td>
+      <td>{{ b.room.name }}</td>
+      <td>{{ b.attendees }}</td>
+      <td>{{ b.start }}</td>
+      <td>{{ b.end }}</td>
+      <td>{{ b.created_by.username }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

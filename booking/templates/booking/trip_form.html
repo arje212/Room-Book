@@ -1,0 +1,162 @@
+{% extends 'booking/base.html' %}
+{% load widget_tweaks %}
+{% block title %}New Trip{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #f8fafc;
+    --surface: #ffffff;
+    --surface2:#f1f5f9;
+    --surface3:#e8edf5;
+    --border:  #e2e8f0;
+    --accent:  #4f46e5;
+    --accent2: #ef4444;
+    --text:    #0f172a;
+    --muted:   #64748b;
+    --dim:     #94a3b8;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    min-height: 100vh !important;
+  }
+
+  .trip-page {
+    min-height: 100vh; display:flex;
+    align-items:center; justify-content:center;
+    padding:40px 20px; position:relative; overflow:hidden;
+  }
+
+  .bg-dots {
+    position:fixed; inset:0;
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events:none; z-index:0; opacity:.5;
+  }
+  .orb { position:fixed; border-radius:50%; filter:blur(90px); pointer-events:none; z-index:0; }
+  .orb-1 { width:400px; height:400px; background:rgba(79,70,229,0.07); top:-100px; right:-80px; animation:drift1 12s ease-in-out infinite alternate; }
+  .orb-2 { width:300px; height:300px; background:rgba(99,102,241,0.05); bottom:-60px; left:-60px; animation:drift2 10s ease-in-out infinite alternate; }
+  @keyframes drift1 { to { transform:translate(-40px,60px); } }
+  @keyframes drift2 { to { transform:translate(40px,-40px); } }
+
+  .trip-card {
+    position:relative; z-index:1;
+    width:100%; max-width:520px;
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:20px; padding:36px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.08);
+    animation:cardIn .35s ease;
+  }
+  @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  .back-link {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; color:var(--muted); text-decoration:none;
+    margin-bottom:24px; transition:.15s;
+    border:1.5px solid var(--border); padding:6px 12px;
+    border-radius:8px; background:var(--surface2); font-weight:500;
+  }
+  .back-link:hover { color:var(--accent); border-color:var(--accent); background:white; }
+
+  .card-icon {
+    width:44px; height:44px;
+    background:linear-gradient(135deg,var(--accent),#6366f1);
+    border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:20px; margin-bottom:14px;
+    box-shadow:0 4px 16px rgba(79,70,229,.2);
+  }
+  .card-title { font-size:21px; font-weight:700; color:var(--text); letter-spacing:-.3px; margin-bottom:4px; }
+  .card-sub { font-size:13px; color:var(--muted); margin-bottom:26px; }
+
+  .form-group { margin-bottom:18px; }
+  .form-label { display:block; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:7px; }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width:100% !important;
+    background:var(--surface2) !important;
+    border:1.5px solid var(--border) !important;
+    border-radius:10px !important;
+    padding:11px 14px !important;
+    font-size:13px !important;
+    font-family:'DM Sans',sans-serif !important;
+    color:var(--text) !important;
+    outline:none !important;
+    transition:.2s !important;
+    resize:vertical;
+  }
+  .form-group textarea { min-height:90px; }
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus { border-color:var(--accent) !important; box-shadow:0 0 0 3px rgba(79,70,229,.1) !important; background:white !important; }
+
+  .form-row { display:flex; gap:14px; margin-bottom:18px; }
+  .form-row .form-group { flex:1; margin-bottom:0; }
+
+  .field-error { font-size:11px; color:var(--accent2); margin-top:4px; }
+
+  .btn-submit {
+    width:100%; padding:13px;
+    background:var(--accent); color:white; border:none;
+    border-radius:10px; font-size:14px; font-weight:700;
+    font-family:'DM Sans',sans-serif; cursor:pointer; transition:.2s; margin-top:6px;
+  }
+  .btn-submit:hover { background:#4338ca; box-shadow:0 8px 24px rgba(79,70,229,.25); transform:translateY(-1px); }
+  .btn-submit:active { transform:translateY(0); }
+</style>
+
+<div class="trip-page">
+  <div class="bg-dots"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="trip-card">
+    <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+
+    <div class="card-icon">✈️</div>
+    <div class="card-title">Add Trip / Schedule</div>
+    <div class="card-sub">Log an upcoming trip or off-site schedule</div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label">Destination</label>
+        {{ form.destination|attr:"placeholder:e.g. Makati Office, Cebu Branch..." }}
+        {% for e in form.destination.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          {{ form.date }}
+          {% for e in form.date.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time</label>
+          {{ form.time }}
+          {% for e in form.time.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Notes</label>
+        {{ form.notes|attr:"placeholder:Any additional details..." }}
+        {% for e in form.notes.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      </div>
+
+      <button type="submit" class="btn-submit">Save Trip →</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

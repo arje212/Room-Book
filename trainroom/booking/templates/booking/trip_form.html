@@ -1,0 +1,60 @@
+{% extends 'booking/base.html' %}
+{% load widget_tweaks %}
+{% block title %}New Trip{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto p-6">
+  <a href="{% url 'dashboard' %}" class="text-sky-600 hover:underline flex items-center gap-1">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+
+  <div class="bg-white rounded-xl shadow-lg p-6 mt-4">
+    <h1 class="text-2xl font-bold mb-6 text-sky-700 flex items-center gap-2">
+      <i class="bi bi-bus-front"></i> Add Trip / Schedule
+    </h1>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      <!-- Destination -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-gray-600">Destination</label>
+        {{ form.destination|add_class:"w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" }}
+        {% for error in form.destination.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Date -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-gray-600">Date</label>
+        {{ form.date|add_class:"w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" }}
+        {% for error in form.date.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Time -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-gray-600">Time</label>
+        {{ form.time|add_class:"w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" }}
+        {% for error in form.time.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Notes -->
+      <div>
+        <label class="block text-sm font-medium mb-1 text-gray-600">Notes</label>
+        {{ form.notes|add_class:"w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" }}
+        {% for error in form.notes.errors %}
+          <p class="text-red-600 text-xs mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <button class="w-full bg-sky-600 hover:bg-sky-700 text-white py-2 rounded-lg font-semibold transition">
+        Save Trip
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

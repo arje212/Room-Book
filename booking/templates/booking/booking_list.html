@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>All Bookings</h2>
+  {% if bookings %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Room</th>
+          <th>Booked By</th>
+          <th>Start</th>
+          <th>End</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for booking in bookings %}
+          <tr>
+            <td>{{ booking.room.name }}</td>
+            <td>{{ booking.created_by.username }}</td>
+            <td>{{ booking.start }}</td>
+            <td>{{ booking.end }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No bookings yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

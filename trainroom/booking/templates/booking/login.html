@@ -1,0 +1,179 @@
+{% extends "booking/base.html" %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<style>
+/* IMPORT FONT */
+@import url('https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800,900&display-swap');
+
+/* Section Animation Layer */
+.login-section {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Leaves Container */
+.leaves {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+.leaves .set div {
+  position: absolute;
+  display: block;
+}
+.leaves .set div:nth-child(1){left:20%; animation: animate 20s linear infinite;}
+.leaves .set div:nth-child(2){left:50%; animation: animate 14s linear infinite;}
+.leaves .set div:nth-child(3){left:70%; animation: animate 12s linear infinite;}
+.leaves .set div:nth-child(4){left:5%; animation: animate 15s linear infinite;}
+.leaves .set div:nth-child(5){left:85%; animation: animate 18s linear infinite;}
+.leaves .set div:nth-child(6){left:90%; animation: animate 12s linear infinite;}
+.leaves .set div:nth-child(7){left:60%; animation: animate 14s linear infinite;}
+.leaves .set div:nth-child(8){left:20%; animation: animate 15s linear infinite;}
+
+@keyframes animate {
+  0% { opacity: 0; top: -10%; transform: translateX(20px) rotate(0deg);}
+  10% { opacity: 1; }
+  20% { transform: translateX(-20px) rotate(45deg);}
+  40% { transform: translateX(-20px) rotate(90deg);}
+  60% { transform: translateX(20px) rotate(180deg);}
+  80% { transform: translateX(-20px) rotate(45deg);}
+  100% { top: 110%; transform: translateX(20px) rotate(225deg);}
+}
+
+/* Walking Girl Animation */
+.girl {
+  position: absolute;
+  bottom: 0;
+  left: -100px;
+  width: 350px;
+  z-index: 2;
+  pointer-events: none;
+  animation: animateGirl 30s linear infinite;
+}
+
+@keyframes animateGirl {
+   0% {
+    transform: translateX(calc(100% + 100vw));
+  }
+  50% {
+    transform: translateX(calc(-100% - 100vw));
+  }
+  50.01% {
+    transform: translateX(calc(-100% - 100vw)) rotateY(180deg);
+  }
+  100% {
+    transform: translateX(calc(100% + 100vw)) rotateY(180deg);
+  }
+}
+
+/* Login Form */
+.login-form-wrapper {
+  position: relative;
+  z-index: 10; /* Above leaves & girl */
+}
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex flex-col">
+
+  <!-- Navbar -->
+  <nav class="flex items-center justify-between px-8 py-4 bg-white/10 backdrop-blur-md text-white">
+    <a href="/" class="text-2xl font-bold tracking-wide">MyBooking</a>
+    <div class="space-x-6 text-sm font-medium">
+      <a href="/" class="hover:underline">Home</a>
+      <a href="{% url 'register' %}" class="hover:underline">Register</a>
+      <a href="{% url 'custom_reset_password' %}" class="hover:underline">Help</a>
+    </div>
+  </nav>
+
+  <!-- Content Area -->
+  <div class="flex flex-1">
+
+    <!-- Left side illustration -->
+    <div class="hidden lg:flex w-1/2 items-center justify-center text-white p-10">
+      <div class="text-center">
+        <h1 class="text-5xl font-extrabold mb-6 drop-shadow-lg">Welcome Back!</h1>
+        <p class="text-lg max-w-md mx-auto opacity-90">
+          Manage your bookings, explore our features, and enjoy a smooth experience.
+        </p>
+        <img src="{% static 'images/login-illustration.svg' %}" alt="Welcome" class="mt-10 w-3/4 mx-auto animate-bounce">
+      </div>
+    </div>
+
+    <!-- Right side login form with animation -->
+    <div class="flex w-full lg:w-1/2 justify-center items-center p-6 login-section">
+
+      <!-- 🍂 Leaves -->
+      <div class="leaves">
+        <div class="set">
+          <div><img src="https://i.ibb.co/S0VnkZq/leaf-01.png" alt="leaf-01"></div>
+          <div><img src="https://i.ibb.co/fFrnHYd/leaf-02.png" alt="leaf-02"></div>
+          <div><img src="https://i.ibb.co/vdx8Jh5/leaf-03.png" alt="leaf-03"></div>
+          <div><img src="https://i.ibb.co/SdcBCvr/leaf-04.png" alt="leaf-04"></div>
+          <div><img src="https://i.ibb.co/S0VnkZq/leaf-01.png" alt="leaf-01"></div>
+          <div><img src="https://i.ibb.co/fFrnHYd/leaf-02.png" alt="leaf-02"></div>
+          <div><img src="https://i.ibb.co/vdx8Jh5/leaf-03.png" alt="leaf-03"></div>
+          <div><img src="https://i.ibb.co/SdcBCvr/leaf-04.png" alt="leaf-04"></div>
+        </div>
+      </div>
+
+      <!-- 🚶‍♀️ Walking girl -->
+      <!--<img src="https://i.ibb.co/W5ssvRf/girl.png" class="girl" alt="girl">-->
+
+      <!-- 🔳 Login Form -->
+      <div class="login-form-wrapper">
+        <form method="post" class="bg-white/80 backdrop-blur-lg shadow-xl rounded-2xl p-8 w-full max-w-md border border-white/30">
+          {% csrf_token %}
+          <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">Login to Your Account</h2>
+
+          {% if messages %}
+            <ul class="mb-4 text-sm text-red-600">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-1 text-gray-700">Username</label>
+            <input name="username" required
+              class="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition">
+          </div>
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-1 text-gray-700">Password</label>
+            <input type="password" name="password" required
+              class="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition">
+          </div>
+
+          <button
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition transform hover:scale-105 shadow-lg">
+            Login
+          </button>
+
+          <p class="text-sm mt-5 text-gray-700 text-center">
+            No account?
+            <a href="{% url 'register' %}" class="text-indigo-600 hover:underline font-medium">Register</a>
+          </p>
+
+          {% if show_reset %}
+            <p class="text-sm mt-3 text-gray-700 text-center">
+              Trouble logging in?
+              <a href="{% url 'custom_reset_password' %}" class="text-indigo-600 hover:underline font-medium">Reset your password</a>
+            </p>
+          {% endif %}
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

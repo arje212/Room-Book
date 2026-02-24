@@ -1,0 +1,93 @@
+{% extends 'booking/base.html' %}
+{% block title %}New Project{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#f8fafc; --surface:#fff; --surface2:#f1f5f9; --border:#e2e8f0;
+    --accent:#4f46e5; --accent2:#ef4444; --accent3:#10b981; --warn:#f59e0b;
+    --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
+    --shadow:0 1px 6px rgba(0,0,0,.06); --radius:14px; --radius-sm:8px;
+  }
+  body { font-family:'DM Sans',sans-serif!important; background:var(--bg)!important; color:var(--text)!important; min-height:100vh!important; }
+
+  .page-wrap { max-width:600px; margin:0 auto; padding:32px 20px; display:flex; flex-direction:column; gap:24px; }
+  .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); text-decoration:none; font-weight:500; transition:.15s; }
+  .back-link:hover { color:var(--accent); }
+  .page-title { font-size:22px; font-weight:700; letter-spacing:-.4px; margin-bottom:4px; }
+  .page-sub { font-size:13px; color:var(--muted); }
+
+  .form-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:28px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .form-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#8b5cf6,#7c3aed); }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-group.full { grid-column:1/-1; }
+  .form-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; }
+  .form-input,.form-select { width:100%; background:var(--surface2); border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:.2s; }
+  .form-input:focus,.form-select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.1); background:white; }
+  .textarea { resize:vertical; min-height:90px; }
+
+  .tesda-note { background:linear-gradient(135deg,#ede9fe,#ddd6fe); border:1.5px solid #c4b5fd; border-radius:var(--radius-sm); padding:12px 14px; font-size:12px; color:#6d28d9; }
+  .tesda-note strong { display:block; font-size:13px; margin-bottom:4px; }
+
+  .btn-submit { width:100%; padding:13px; background:linear-gradient(135deg,#8b5cf6,#7c3aed); color:white; border:none; border-radius:var(--radius-sm); font-size:15px; font-weight:700; font-family:'DM Sans',sans-serif; cursor:pointer; transition:.2s; margin-top:4px; }
+  .btn-submit:hover { opacity:.9; box-shadow:0 4px 20px rgba(139,92,246,.35); }
+</style>
+
+<div class="page-wrap">
+  <a href="{% url 'project_list' %}" class="back-link">← Back to Projects</a>
+  <div>
+    <div class="page-title">🗂 New Project</div>
+    <div class="page-sub">Add a training program, TESDA seminar, or future initiative</div>
+  </div>
+
+  <div class="tesda-note">
+    <strong>💡 Tip: TESDA / External Training</strong>
+    Use the "Provider" field to record TESDA or external trainers. Set a budget so it's tracked in the admin dashboard.
+  </div>
+
+  <div class="form-card">
+    <form method="POST" action="{% url 'project_create' %}">
+      {% csrf_token %}
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-group full">
+          <label class="form-label">Project Title *</label>
+          <input type="text" name="title" class="form-input" placeholder="e.g. TESDA Bread & Pastry Production Training" required>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Description</label>
+          <textarea name="description" class="form-input textarea" placeholder="What is this project about?"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Provider / Trainer</label>
+          <input type="text" name="provider" class="form-input" placeholder="e.g. TESDA, External Trainer">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Budget (₱)</label>
+          <input type="number" name="budget" class="form-input" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target Date</label>
+          <input type="date" name="target_date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="Planned">🟣 Planned</option>
+            <option value="In Progress">🔵 In Progress</option>
+            <option value="Done">🟢 Done</option>
+            <option value="Cancelled">🔴 Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-submit">＋ Create Project</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

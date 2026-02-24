@@ -1,0 +1,24 @@
+{% extends "booking/base.html" %}
+{% block content %}
+<h1 class="text-xl font-bold mb-4">Staff Accounts</h1>
+<table class="table-auto w-full border">
+  <thead>
+    <tr class="bg-gray-200">
+      <th>ID</th><th>Username</th><th>Email</th><th>Color</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in staff_users %}
+    <tr>
+      <td>{{ u.id }}</td>
+      <td>{{ u.username }}</td>
+      <td>{{ u.email }}</td>
+      <td style="color: {{ u.profile.color }}">{{ u.profile.color }}</td>
+      <td>
+        <a href="{% url 'admin:auth_user_change' u.id %}" class="text-blue-600">Edit</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

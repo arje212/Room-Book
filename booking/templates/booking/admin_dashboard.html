@@ -1,0 +1,559 @@
+{% extends "booking/base.html" %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#f8fafc; --surface:#fff; --surface2:#f1f5f9; --border:#e2e8f0;
+    --accent:#4f46e5; --accent2:#ef4444; --accent3:#10b981; --warn:#f59e0b;
+    --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
+    --shadow:0 1px 6px rgba(0,0,0,0.06); --shadow-md:0 4px 20px rgba(0,0,0,0.08);
+    --radius:12px; --radius-sm:8px;
+  }
+  body { font-family:'DM Sans',sans-serif!important; background:var(--bg)!important; color:var(--text)!important; min-height:100vh!important; }
+
+  .admin-layout { display:flex; min-height:100vh; }
+
+  /* SIDEBAR */
+  .admin-sidebar { width:220px; flex-shrink:0; background:var(--surface); border-right:1.5px solid var(--border); display:flex; flex-direction:column; padding:24px 14px; gap:4px; position:sticky; top:0; height:100vh; overflow-y:auto; box-shadow:var(--shadow); }
+  .sidebar-brand { display:flex; align-items:center; gap:9px; font-size:15px; font-weight:700; color:var(--text); margin-bottom:24px; padding:0 6px; }
+  .sidebar-brand .dot { width:8px; height:8px; background:var(--accent); border-radius:50%; box-shadow:0 0 0 3px rgba(79,70,229,.2); }
+  .sidebar-label { font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--dim); padding:10px 8px 4px; font-weight:600; }
+  .sidebar-link { display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:var(--radius-sm); font-size:13px; color:var(--muted); text-decoration:none; transition:.15s; border:1.5px solid transparent; font-weight:500; cursor:pointer; }
+  .sidebar-link:hover { background:var(--surface2); color:var(--text); border-color:var(--border); }
+  .sidebar-link.active { background:#eef2ff; color:var(--accent); border-color:#c7d2fe; }
+  .sidebar-divider { height:1.5px; background:var(--border); margin:8px 0; }
+  .btn-logout-side { display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:var(--radius-sm); font-size:13px; color:var(--accent2); text-decoration:none; transition:.15s; border:1.5px solid transparent; font-weight:600; margin-top:auto; }
+  .btn-logout-side:hover { background:#fef2f2; border-color:#fecaca; }
+  .notif-dot { display:inline-block; width:7px; height:7px; background:var(--accent2); border-radius:50%; margin-left:4px; animation:blink 1.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* MAIN */
+  .admin-main { flex:1; overflow-y:auto; padding:28px 32px; display:flex; flex-direction:column; gap:28px; }
+
+  /* PAGE HEADER */
+  .page-header { display:flex; align-items:center; justify-content:space-between; }
+  .page-title { font-size:22px; font-weight:700; color:var(--text); letter-spacing:-.4px; }
+  .page-sub { font-size:13px; color:var(--muted); margin-top:3px; }
+
+  /* SUMMARY CARDS */
+  .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; }
+  .summary-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); padding:20px 20px 16px; box-shadow:var(--shadow); transition:.2s; position:relative; overflow:hidden; }
+  .summary-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .summary-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),#818cf8); }
+  .summary-card.green::before { background:linear-gradient(90deg,#10b981,#059669); }
+  .summary-card.amber::before { background:linear-gradient(90deg,#f59e0b,#d97706); }
+  .summary-icon { font-size:22px; margin-bottom:10px; }
+  .summary-label { font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); font-weight:600; margin-bottom:4px; }
+  .summary-count { font-family:'DM Mono',monospace; font-size:26px; font-weight:500; color:var(--text); }
+
+  /* SECTION */
+  .section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .section-title { font-size:15px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+
+  /* TABLE */
+  .table-wrap { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { background:var(--surface2); padding:11px 16px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); border-bottom:1.5px solid var(--border); }
+  tbody tr { border-bottom:1px solid var(--border); transition:.15s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--surface2); }
+  tbody td { padding:12px 16px; color:var(--text); vertical-align:middle; }
+  .empty-row td { text-align:center; color:var(--dim); padding:20px; }
+
+  /* BADGES */
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .badge-green  { background:#d1fae5; color:#059669; border:1px solid #a7f3d0; }
+  .badge-yellow { background:#fef9c3; color:#b45309; border:1px solid #fde68a; }
+  .badge-red    { background:#fee2e2; color:#dc2626; border:1px solid #fecaca; }
+  .badge-gray   { background:var(--surface2); color:var(--muted); border:1px solid var(--border); }
+  .badge-blue   { background:#dbeafe; color:#1d4ed8; border:1px solid #bfdbfe; }
+  .badge-violet { background:#ede9fe; color:#7c3aed; border:1px solid #ddd6fe; }
+
+  /* BUTTONS */
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:var(--radius-sm); font-size:12px; font-weight:600; text-decoration:none; transition:.15s; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .btn-green  { background:#d1fae5; color:#059669; border:1px solid #a7f3d0; }
+  .btn-green:hover  { background:#059669; color:white; }
+  .btn-red    { background:#fee2e2; color:#dc2626; border:1px solid #fecaca; }
+  .btn-red:hover    { background:#dc2626; color:white; }
+  .btn-amber  { background:#fef9c3; color:#b45309; border:1px solid #fde68a; }
+  .btn-amber:hover  { background:#d97706; color:white; }
+  .btn-primary { background:var(--accent); color:white; }
+  .btn-primary:hover { background:#4338ca; }
+  .btn-export { background:#d1fae5; color:#059669; border:1px solid #a7f3d0; }
+  .btn-export:hover { background:#059669; color:white; }
+
+  /* 🆕 USER TABLE with delete/deactivate */
+  .user-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* ROOM CARDS */
+  .room-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+  .room-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:.2s; }
+  .room-card:hover { box-shadow:var(--shadow-md); }
+  .room-card img { width:100%; height:160px; object-fit:cover; display:block; border-bottom:1.5px solid var(--border); }
+  .room-card-body { padding:18px; display:flex; flex-direction:column; gap:12px; }
+  .room-card-title { font-size:14px; font-weight:700; color:var(--text); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-group.full { grid-column:1/-1; }
+  .form-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; }
+  .form-input,.form-select { width:100%; background:var(--surface2); border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px; font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:.2s; -webkit-appearance:none; }
+  .form-input:focus,.form-select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.1); background:white; }
+  .btn-update { width:100%; padding:10px; background:var(--accent3); color:white; border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:700; font-family:'DM Sans',sans-serif; cursor:pointer; transition:.2s; }
+  .btn-update:hover { background:#059669; }
+
+  /* 🆕 BILLING HIGHLIGHT */
+  .revenue-banner {
+    background:linear-gradient(135deg,#10b981,#059669);
+    border-radius:var(--radius); padding:20px 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 4px 20px rgba(16,185,129,.25);
+  }
+  .revenue-label { font-size:13px; color:rgba(255,255,255,.85); font-weight:600; text-transform:uppercase; letter-spacing:1px; }
+  .revenue-amount { font-family:'DM Mono',monospace; font-size:32px; font-weight:500; color:white; }
+  .revenue-sub { font-size:12px; color:rgba(255,255,255,.7); margin-top:2px; }
+
+  /* 🆕 PROJECT STATUS */
+  .project-status { display:inline-flex; align-items:center; gap:5px; }
+
+  /* CONFIRM MODAL */
+  .confirm-modal { display:none; position:fixed; inset:0; background:rgba(15,23,42,.45); backdrop-filter:blur(4px); z-index:900; align-items:center; justify-content:center; }
+  .confirm-modal.open { display:flex; }
+  .confirm-box { background:var(--surface); border:1.5px solid var(--border); border-radius:16px; padding:28px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.15); animation:modalIn .2s ease; }
+  @keyframes modalIn { from{opacity:0;transform:scale(.96) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  .confirm-title { font-size:16px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .confirm-body { font-size:13px; color:var(--muted); margin-bottom:20px; line-height:1.6; }
+  .confirm-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+  *::-webkit-scrollbar { width:4px; height:4px; }
+  *::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+</style>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand"><div class="dot"></div> Admin Panel</div>
+    <div class="sidebar-label">Overview</div>
+    <a href="#summary" class="sidebar-link active"><span>📊</span> Dashboard</a>
+    <div class="sidebar-label">Management</div>
+    <a href="#bookings"  class="sidebar-link"><span>📅</span> Bookings</a>
+    <a href="#billing"   class="sidebar-link"><span>💰</span> Billing</a>
+    <a href="#staff"     class="sidebar-link"><span>👥</span> Staff</a>
+    <a href="#all-users" class="sidebar-link"><span>🧑‍💼</span> All Users</a>
+    <a href="#rooms"     class="sidebar-link"><span>🚪</span> Rooms</a>
+    <a href="#projects"  class="sidebar-link"><span>🗂</span> Projects</a>
+    <div class="sidebar-label">Requests</div>
+    <a href="#password-requests" class="sidebar-link"><span>🔑</span> Password Resets <span class="notif-dot" id="pwDot" style="display:none;"></span></a>
+    <a href="#pending-users"     class="sidebar-link"><span>👤</span> Registrations <span class="notif-dot" id="regDot" style="display:none;"></span></a>
+    <div class="sidebar-divider"></div>
+    <a href="{% url 'logout' %}" class="btn-logout-side"><span>→</span> Logout</a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="admin-main">
+
+    <!-- Header -->
+    <div id="summary" class="page-header">
+      <div>
+        <div class="page-title">Admin Dashboard</div>
+        <div class="page-sub">Manage bookings, users, rooms, and projects</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <a href="{% url 'chat_view' %}" class="btn btn-primary">💬 Team Chat</a>
+        <a href="{% url 'project_list' %}" class="btn btn-green">🗂 Projects</a>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      {% for card in summary_cards %}
+      <div class="summary-card {% if 'Revenue' in card.label %}green{% elif 'Pending' in card.label %}amber{% endif %}">
+        <div class="summary-icon">
+          {% if 'Booking' in card.label %}📅
+          {% elif 'Pending' in card.label %}⏳
+          {% elif 'Approved' in card.label %}✅
+          {% elif 'Staff' in card.label %}👥
+          {% elif 'Room' in card.label %}🚪
+          {% elif 'Revenue' in card.label %}💰
+          {% else %}📌{% endif %}
+        </div>
+        <div class="summary-label">{{ card.label }}</div>
+        <div class="summary-count">{{ card.count }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- 🆕 BILLING BANNER -->
+    <div id="billing">
+      <div class="section-header">
+        <div class="section-title">💰 Room Billing</div>
+        <div style="display:flex;gap:8px;">
+          <a href="{% url 'room_billing_report' %}" class="btn btn-primary">View Full Report</a>
+          <a href="{% url 'export_billing_excel' %}" class="btn btn-export">⬇ Export Billing Excel</a>
+        </div>
+      </div>
+      <div class="revenue-banner" style="margin-bottom:16px;">
+        <div>
+          <div class="revenue-label">Total Room Revenue</div>
+          <div class="revenue-amount">₱{{ total_revenue|floatformat:2 }}</div>
+          <div class="revenue-sub">Computed from all approved bookings</div>
+        </div>
+        <div style="font-size:48px;">💰</div>
+      </div>
+      <!-- Recent billing table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Booking</th><th>Room</th><th>User</th><th>Date</th><th>Hours</th><th>Cost</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for b in bookings|slice:":8" %}
+            <tr>
+              <td><span style="font-family:'DM Mono',monospace;color:var(--dim);">#{{ b.id }}</span> {{ b.title }}</td>
+              <td>{{ b.room.name }}</td>
+              <td><strong>{{ b.created_by.username }}</strong></td>
+              <td>{{ b.start|date:"M d, Y" }}</td>
+              <td>{{ b.hours_used }}h</td>
+              <td style="font-family:'DM Mono',monospace;color:var(--accent3);font-weight:700;">
+                {% if b.total_cost > 0 %}₱{{ b.total_cost|floatformat:2 }}{% else %}<span style="color:var(--dim);">Free</span>{% endif %}
+              </td>
+              <td>
+                <span class="badge {% if b.status == 'Approved' %}badge-green{% elif b.status == 'Pending' %}badge-yellow{% else %}badge-red{% endif %}">{{ b.status }}</span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="7">No bookings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Booking History -->
+    <section id="bookings">
+      <div class="section-header">
+        <div class="section-title">📅 All Bookings</div>
+        <a href="{% url 'export_bookings' %}" class="btn btn-export">⬇ Export Excel</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>User</th><th>Room</th><th>Start</th><th>End</th><th>Cost</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td><span style="font-family:'DM Mono',monospace;color:var(--dim);">#{{ b.id }}</span></td>
+              <td><strong>{{ b.created_by.username }}</strong></td>
+              <td>{{ b.room.name }}</td>
+              <td>{{ b.start|date:"M d, Y H:i" }}</td>
+              <td>{{ b.end|date:"M d, Y H:i" }}</td>
+              <td style="font-family:'DM Mono',monospace;">{% if b.total_cost > 0 %}₱{{ b.total_cost|floatformat:2 }}{% else %}—{% endif %}</td>
+              <td><span class="badge {% if b.status == 'Approved' %}badge-green{% elif b.status == 'Pending' %}badge-yellow{% else %}badge-red{% endif %}">{{ b.status }}</span></td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="7">No bookings found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Staff -->
+    <section id="staff">
+      <div class="section-header">
+        <div class="section-title">👥 Staff Accounts</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for s in staff_accounts %}
+            <tr>
+              <td><span style="font-family:'DM Mono',monospace;color:var(--dim);">#{{ s.id }}</span></td>
+              <td><strong>{{ s.username }}</strong></td>
+              <td>{{ s.email }}</td>
+              <td><span class="badge {% if s.is_active %}badge-green{% else %}badge-gray{% endif %}">{% if s.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+              <td>
+                <div class="user-actions">
+                  <a href="{% url 'edit_staff' s.id %}" class="btn btn-amber">✏ Edit</a>
+                  {% if s.is_active %}
+                  <button class="btn btn-amber" onclick="confirmDeactivate({{ s.id }}, '{{ s.username }}')">⏸ Deactivate</button>
+                  {% endif %}
+                  <button class="btn btn-red" onclick="confirmDelete({{ s.id }}, '{{ s.username }}')">🗑 Delete</button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="5">No staff accounts.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 🆕 ALL USERS (resigned / delete) -->
+    <section id="all-users">
+      <div class="section-header">
+        <div class="section-title">🧑‍💼 All Users</div>
+        <span style="font-size:12px;color:var(--dim);">Manage or remove resigned employees</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for u in all_users %}
+            <tr>
+              <td><span style="font-family:'DM Mono',monospace;color:var(--dim);">#{{ u.id }}</span></td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.date_joined|date:"M d, Y" }}</td>
+              <td><span class="badge {% if u.is_active %}badge-green{% else %}badge-gray{% endif %}">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+              <td>
+                <div class="user-actions">
+                  {% if u.is_active %}
+                  <button class="btn btn-amber" onclick="confirmDeactivate({{ u.id }}, '{{ u.username }}')">⏸ Deactivate</button>
+                  {% else %}
+                  <a href="{% url 'approve_user' u.id %}" class="btn btn-green">✓ Reactivate</a>
+                  {% endif %}
+                  <button class="btn btn-red" onclick="confirmDelete({{ u.id }}, '{{ u.username }}')">🗑 Delete</button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="6">No users found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Password Requests -->
+    <section id="password-requests">
+      <div class="section-header"><div class="section-title">🔑 Password Change Requests</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>User</th><th>Requested At</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for req in password_requests %}
+            <tr>
+              <td><strong>{{ req.user.username }}</strong></td>
+              <td>{{ req.requested_at|date:"M d, Y H:i" }}</td>
+              <td><span class="badge badge-yellow">Pending</span></td>
+              <td style="display:flex;gap:8px;">
+                <a href="{% url 'approve_password_change' req.id %}" class="btn btn-green">✓ Approve</a>
+                <a href="{% url 'reject_password_change' req.id %}" class="btn btn-red">✕ Reject</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="4">No pending requests.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Pending Registrations -->
+    <section id="pending-users">
+      <div class="section-header"><div class="section-title">👤 Pending Registrations</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Date Joined</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for user in pending_users %}
+            <tr>
+              <td><span style="font-family:'DM Mono',monospace;color:var(--dim);">#{{ user.id }}</span></td>
+              <td><strong>{{ user.username }}</strong></td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.date_joined|date:"M d, Y H:i" }}</td>
+              <td style="display:flex;gap:8px;">
+                <a href="{% url 'approve_user' user.id %}" class="btn btn-green">✓ Approve</a>
+                <a href="{% url 'reject_user' user.id %}"  class="btn btn-red">✕ Reject</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="5">No pending registrations.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 🆕 PROJECTS PREVIEW -->
+    <section id="projects">
+      <div class="section-header">
+        <div class="section-title">🗂 Future Projects</div>
+        <a href="{% url 'project_list' %}" class="btn btn-primary">View All Projects</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Provider</th><th>Target Date</th><th>Budget</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for p in projects %}
+            <tr>
+              <td><strong>{{ p.title }}</strong></td>
+              <td>{{ p.provider|default:"—" }}</td>
+              <td>{{ p.target_date|date:"M d, Y"|default:"TBD" }}</td>
+              <td style="font-family:'DM Mono',monospace;">{% if p.budget > 0 %}₱{{ p.budget|floatformat:2 }}{% else %}—{% endif %}</td>
+              <td>
+                <span class="badge {% if p.status == 'Done' %}badge-green{% elif p.status == 'In Progress' %}badge-blue{% elif p.status == 'Cancelled' %}badge-red{% else %}badge-violet{% endif %}">{{ p.status }}</span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr class="empty-row"><td colspan="5">No projects yet. <a href="{% url 'project_create' %}" style="color:var(--accent);">Add one →</a></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Room Management -->
+    <section id="rooms">
+      <div class="section-header"><div class="section-title">🚪 Room Management</div></div>
+      <div class="room-grid">
+        {% for room in rooms %}
+        <div class="room-card">
+          {% if room.image %}<img src="{{ room.image.url }}" alt="{{ room.name }}">
+          {% else %}<img src="https://via.placeholder.com/400x160?text={{ room.name }}" alt="{{ room.name }}">{% endif %}
+          <div class="room-card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div class="room-card-title">{{ room.name }}</div>
+              {% if room.price_per_hour > 0 %}
+              <span class="badge badge-green">₱{{ room.price_per_hour }}/hr</span>
+              {% else %}
+              <span class="badge badge-gray">Free</span>
+              {% endif %}
+            </div>
+            <form method="POST" action="{% url 'update_room' room.id %}" enctype="multipart/form-data">
+              {% csrf_token %}
+              <div class="form-row">
+                <div class="form-group"><label class="form-label">Name</label><input type="text" name="name" value="{{ room.name }}" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Capacity</label><input type="number" name="capacity" value="{{ room.capacity }}" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Price/hr (₱)</label><input type="number" name="price_per_hour" value="{{ room.price_per_hour }}" class="form-input" step="0.01" min="0"></div>
+                <div class="form-group">
+                  <label class="form-label">Projector</label>
+                  <select name="projector" class="form-select">
+                    <option value="Yes" {% if room.projector == "Yes" %}selected{% endif %}>Yes</option>
+                    <option value="No"  {% if room.projector == "No"  %}selected{% endif %}>No</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Speaker</label>
+                  <select name="speaker" class="form-select">
+                    <option value="Yes" {% if room.speaker == "Yes" %}selected{% endif %}>Yes</option>
+                    <option value="No"  {% if room.speaker == "No"  %}selected{% endif %}>No</option>
+                  </select>
+                </div>
+                <div class="form-group"><label class="form-label">Tables</label><input type="number" name="tables" value="{{ room.tables }}" class="form-input"></div>
+                <div class="form-group"><label class="form-label">Chairs</label><input type="number" name="chairs" value="{{ room.chairs }}" class="form-input"></div>
+                <div class="form-group full"><label class="form-label">Upload Image</label><input type="file" name="image" class="form-input"></div>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button type="submit" class="btn-update" style="flex:1;">Update Room</button>
+                <a href="{% url 'delete_room' room.id %}" class="btn btn-red" style="padding:10px 14px;" onclick="return confirm('Delete {{ room.name }}?')">🗑</a>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- 🆕 CONFIRM DELETE MODAL -->
+<div class="confirm-modal" id="deleteModal">
+  <div class="confirm-box">
+    <div class="confirm-title">🗑 Delete User</div>
+    <div class="confirm-body">Are you sure you want to <strong>permanently delete</strong> user <strong id="deleteUsername"></strong>? This cannot be undone — all their data will be removed.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-amber" onclick="document.getElementById('deleteModal').classList.remove('open')">Cancel</button>
+      <a class="btn btn-red" id="deleteConfirmBtn">Yes, Delete</a>
+    </div>
+  </div>
+</div>
+
+<!-- 🆕 CONFIRM DEACTIVATE MODAL -->
+<div class="confirm-modal" id="deactivateModal">
+  <div class="confirm-box">
+    <div class="confirm-title">⏸ Deactivate User</div>
+    <div class="confirm-body">Deactivate <strong id="deactivateUsername"></strong>? They won't be able to login but their booking history will be preserved. You can reactivate them later.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-amber" onclick="document.getElementById('deactivateModal').classList.remove('open')">Cancel</button>
+      <a class="btn btn-red" id="deactivateConfirmBtn">Yes, Deactivate</a>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  /* Sidebar smooth scroll */
+  document.querySelectorAll('.sidebar-link[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  /* Notifications */
+  if (Notification.permission !== "granted") Notification.requestPermission();
+
+  async function checkPasswordRequests() {
+    try {
+      const res = await fetch("{% url 'pending_password_requests_api' %}");
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('pwDot').style.display = data.length ? 'inline-block' : 'none';
+        data.forEach(r => {
+          if (Notification.permission === "granted")
+            new Notification("Password Change Request", {body:`User: ${r.user}\n${r.requested_at}`});
+        });
+      }
+    } catch(e) {}
+  }
+  async function checkUserRegistrations() {
+    try {
+      const res = await fetch("{% url 'pending_user_registrations_api' %}");
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('regDot').style.display = data.length ? 'inline-block' : 'none';
+        data.forEach(u => {
+          if (Notification.permission === "granted")
+            new Notification("New Registration", {body:`Username: ${u.username}\n${u.date_joined}`});
+        });
+      }
+    } catch(e) {}
+  }
+  setInterval(checkPasswordRequests, 10000);
+  setInterval(checkUserRegistrations, 10000);
+  checkPasswordRequests();
+  checkUserRegistrations();
+});
+
+/* 🆕 Delete / Deactivate confirm modals */
+function confirmDelete(userId, username) {
+  document.getElementById('deleteUsername').textContent = username;
+  document.getElementById('deleteConfirmBtn').href = `/dashboard-admin/delete-user/${userId}/`;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function confirmDeactivate(userId, username) {
+  document.getElementById('deactivateUsername').textContent = username;
+  document.getElementById('deactivateConfirmBtn').href = `/dashboard-admin/deactivate-user/${userId}/`;
+  document.getElementById('deactivateModal').classList.add('open');
+}
+/* Close modals on outside click */
+['deleteModal','deactivateModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+</script>
+
+{% endblock %}

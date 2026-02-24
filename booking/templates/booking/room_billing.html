@@ -1,0 +1,190 @@
+{% extends 'booking/base.html' %}
+{% block title %}Room Billing Report{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#f8fafc; --surface:#fff; --surface2:#f1f5f9; --border:#e2e8f0;
+    --accent:#4f46e5; --accent2:#ef4444; --accent3:#10b981;
+    --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
+    --shadow:0 1px 6px rgba(0,0,0,.06); --shadow-md:0 4px 20px rgba(0,0,0,.08);
+    --radius:14px; --radius-sm:8px;
+  }
+  body { font-family:'DM Sans',sans-serif!important; background:var(--bg)!important; color:var(--text)!important; min-height:100vh!important; }
+
+  .page-wrap { max-width:1100px; margin:0 auto; padding:32px 20px; display:flex; flex-direction:column; gap:24px; }
+  .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); text-decoration:none; font-weight:500; transition:.15s; }
+  .back-link:hover { color:var(--accent); }
+
+  /* HERO BANNER */
+  .billing-hero {
+    background:linear-gradient(135deg,#10b981,#059669);
+    border-radius:var(--radius); padding:28px 32px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 8px 30px rgba(16,185,129,.3);
+  }
+  .hero-label { font-size:13px; color:rgba(255,255,255,.85); text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:6px; }
+  .hero-amount { font-family:'DM Mono',monospace; font-size:42px; font-weight:500; color:white; letter-spacing:-1px; }
+  .hero-sub { font-size:12px; color:rgba(255,255,255,.7); margin-top:4px; }
+  .hero-icon { font-size:60px; opacity:.7; }
+
+  /* STATS ROW */
+  .stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; }
+  .stat-card { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; box-shadow:var(--shadow); }
+  .stat-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:4px; }
+  .stat-val { font-family:'DM Mono',monospace; font-size:22px; font-weight:500; color:var(--text); }
+
+  /* FILTERS */
+  .filter-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .filter-row input,.filter-row select { padding:8px 12px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:var(--surface2); font-size:13px; font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:.2s; }
+  .filter-row input:focus,.filter-row select:focus { border-color:var(--accent); background:white; }
+
+  .btn-export { display:inline-flex; align-items:center; gap:6px; padding:9px 16px; background:#d1fae5; color:#059669; border:1.5px solid #a7f3d0; border-radius:var(--radius-sm); font-size:13px; font-weight:700; text-decoration:none; transition:.15s; }
+  .btn-export:hover { background:#059669; color:white; border-color:#059669; }
+
+  /* TABLE */
+  .table-wrap { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { background:var(--surface2); padding:12px 16px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); border-bottom:1.5px solid var(--border); white-space:nowrap; }
+  tbody tr { border-bottom:1px solid var(--border); transition:.15s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:var(--surface2); }
+  tbody td { padding:12px 16px; color:var(--text); vertical-align:middle; }
+  .empty-row td { text-align:center; color:var(--dim); padding:24px; }
+
+  .badge { display:inline-flex; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; text-transform:uppercase; }
+  .badge-green  { background:#d1fae5; color:#059669; }
+  .badge-yellow { background:#fef9c3; color:#b45309; }
+  .badge-red    { background:#fee2e2; color:#dc2626; }
+  .badge-gray   { background:var(--surface2); color:var(--muted); }
+
+  .cost-cell { font-family:'DM Mono',monospace; font-size:13px; font-weight:700; color:var(--accent3); }
+  .free-cell { font-size:12px; color:var(--dim); }
+
+  /* TOTALS ROW */
+  tfoot td { padding:12px 16px; font-weight:700; border-top:2px solid var(--border); background:var(--surface2); font-size:13px; }
+  .total-label { text-align:right; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; font-size:11px; }
+</style>
+
+<div class="page-wrap">
+  <a href="{% url 'admin_dashboard' %}" class="back-link">← Admin Dashboard</a>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-size:24px;font-weight:700;letter-spacing:-.5px;">💰 Room Billing Report</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;">Full record of all room usage charges</div>
+    </div>
+    <a href="{% url 'export_billing_excel' %}" class="btn-export">⬇ Export to Excel</a>
+  </div>
+
+  <!-- HERO BANNER -->
+  <div class="billing-hero">
+    <div>
+      <div class="hero-label">Total Room Revenue</div>
+      <div class="hero-amount">₱{{ total_revenue|floatformat:2 }}</div>
+      <div class="hero-sub">Computed from all bookings with room rates</div>
+    </div>
+    <div class="hero-icon">💰</div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Total Bookings</div>
+      <div class="stat-val">{{ bookings|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">With Cost</div>
+      <div class="stat-val">{{ bookings|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Cost / Booking</div>
+      <div class="stat-val" style="font-size:16px;">
+        {% if bookings %}₱{% widthratio total_revenue bookings|length 1 %}{% else %}—{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-row">
+    <input type="text" id="searchInput" placeholder="🔍 Search booking or user…" oninput="filterTable()">
+    <select id="statusFilter" onchange="filterTable()">
+      <option value="">All Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Approved">Approved</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+  </div>
+
+  <!-- BILLING TABLE -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Title</th>
+          <th>Room</th>
+          <th>Booked By</th>
+          <th>Date</th>
+          <th>Hours</th>
+          <th>Rate/hr</th>
+          <th>Total Cost</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="billingBody">
+        {% for b in bookings %}
+        <tr data-status="{{ b.status }}" data-search="{{ b.title|lower }} {{ b.created_by.username|lower }} {{ b.room.name|lower }}">
+          <td><span style="font-family:'DM Mono',monospace;color:var(--dim);">#{{ b.id }}</span></td>
+          <td><strong>{{ b.title }}</strong></td>
+          <td>{{ b.room.name }}</td>
+          <td>{{ b.created_by.username }}</td>
+          <td>{{ b.start|date:"M d, Y" }}</td>
+          <td style="font-family:'DM Mono',monospace;">{{ b.hours_used }}h</td>
+          <td style="font-family:'DM Mono',monospace;color:var(--muted);">
+            {% if b.room.price_per_hour > 0 %}₱{{ b.room.price_per_hour|floatformat:2 }}{% else %}—{% endif %}
+          </td>
+          <td>
+            {% if b.total_cost > 0 %}
+            <span class="cost-cell">₱{{ b.total_cost|floatformat:2 }}</span>
+            {% else %}
+            <span class="free-cell">Free</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge {% if b.status == 'Approved' %}badge-green{% elif b.status == 'Pending' %}badge-yellow{% else %}badge-red{% endif %}">{{ b.status }}</span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="empty-row"><td colspan="9">No billing records found.</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="7" class="total-label">GRAND TOTAL</td>
+          <td class="cost-cell" style="font-size:16px;">₱{{ total_revenue|floatformat:2 }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+</div>
+
+<script>
+function filterTable() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  document.querySelectorAll('#billingBody tr').forEach(row => {
+    const matchSearch = !search || (row.dataset.search || '').includes(search);
+    const matchStatus = !status || row.dataset.status === status;
+    row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+  });
+}
+</script>
+
+{% endblock %}

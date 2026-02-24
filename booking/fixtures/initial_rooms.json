@@ -1,0 +1,42 @@
+[
+  {
+    "model": "booking.room",
+    "pk": 1,
+    "fields": {
+      "name": "Meeting Room 1",
+      "description": "Main Conference Room"
+    }
+  },
+  {
+    "model": "booking.room",
+    "pk": 2,
+    "fields": {
+      "name": "Meeting Room 2",
+      "description": "Projector Room"
+    }
+  },
+  {
+    "model": "booking.room",
+    "pk": 3,
+    "fields": {
+      "name": "Meeting Room 3",
+      "description": ""
+    }
+  },
+  {
+    "model": "booking.room",
+    "pk": 4,
+    "fields": {
+      "name": "Meeting Room 4",
+      "description": ""
+    }
+  },
+  {
+    "model": "booking.room",
+    "pk": 5,
+    "fields": {
+      "name": "Interview Room",
+      "description": ""
+    }
+  }
+]

@@ -1,0 +1,160 @@
+{% extends 'booking/base.html' %}
+{% block title %}Future Projects{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#f8fafc; --surface:#fff; --surface2:#f1f5f9; --border:#e2e8f0;
+    --accent:#4f46e5; --accent2:#ef4444; --accent3:#10b981; --warn:#f59e0b;
+    --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
+    --shadow:0 1px 6px rgba(0,0,0,.06); --shadow-md:0 4px 20px rgba(0,0,0,.08);
+    --radius:14px; --radius-sm:8px;
+  }
+  body { font-family:'DM Sans',sans-serif!important; background:var(--bg)!important; color:var(--text)!important; min-height:100vh!important; }
+
+  .page-wrap { max-width:1000px; margin:0 auto; padding:32px 20px; display:flex; flex-direction:column; gap:24px; }
+  .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); text-decoration:none; font-weight:500; transition:.15s; }
+  .back-link:hover { color:var(--accent); }
+  .page-header { display:flex; align-items:center; justify-content:space-between; }
+  .page-title { font-size:24px; font-weight:700; letter-spacing:-.5px; }
+  .page-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+
+  .btn-new { display:inline-flex; align-items:center; gap:6px; padding:10px 18px; background:var(--accent); color:white; text-decoration:none; border-radius:var(--radius-sm); font-size:13px; font-weight:700; transition:.2s; }
+  .btn-new:hover { background:#4338ca; box-shadow:0 4px 16px rgba(79,70,229,.25); }
+
+  /* STATUS TABS */
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; }
+  .tab { padding:7px 16px; border-radius:20px; font-size:12px; font-weight:600; border:1.5px solid var(--border); background:var(--surface); color:var(--muted); cursor:pointer; transition:.15s; text-decoration:none; }
+  .tab:hover,.tab.active { border-color:var(--accent); color:var(--accent); background:#eef2ff; }
+
+  /* PROJECT GRID */
+  .project-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:20px; }
+
+  /* PROJECT CARD */
+  .project-card {
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);
+    transition:.2s; position:relative; overflow:hidden;
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .project-card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .project-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .project-card.Planned::before      { background:linear-gradient(90deg,#8b5cf6,#7c3aed); }
+  .project-card.In\ Progress::before { background:linear-gradient(90deg,#3b82f6,#1d4ed8); }
+  .project-card.Done::before          { background:linear-gradient(90deg,#10b981,#059669); }
+  .project-card.Cancelled::before     { background:linear-gradient(90deg,#ef4444,#dc2626); }
+
+  .project-status-row { display:flex; align-items:center; justify-content:space-between; }
+  .status-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+  .status-badge.Planned      { background:#ede9fe; color:#7c3aed; }
+  .status-badge.In\ Progress { background:#dbeafe; color:#1d4ed8; }
+  .status-badge.Done          { background:#d1fae5; color:#059669; }
+  .status-badge.Cancelled     { background:#fee2e2; color:#dc2626; }
+
+  .project-title { font-size:16px; font-weight:700; color:var(--text); }
+  .project-desc  { font-size:13px; color:var(--muted); line-height:1.55; }
+  .project-meta  { display:flex; flex-direction:column; gap:5px; }
+  .meta-row { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--dim); }
+  .meta-row strong { color:var(--text); font-weight:600; }
+
+  .project-actions { display:flex; gap:8px; margin-top:4px; }
+  .status-form select { padding:6px 10px; border-radius:var(--radius-sm); border:1.5px solid var(--border); background:var(--surface2); font-size:12px; font-family:'DM Sans',sans-serif; color:var(--text); cursor:pointer; }
+  .status-form button { padding:6px 12px; border-radius:var(--radius-sm); background:var(--accent); color:white; border:none; font-size:12px; font-weight:600; cursor:pointer; transition:.15s; font-family:'DM Sans',sans-serif; }
+  .status-form button:hover { background:#4338ca; }
+  .delete-btn { padding:6px 10px; border-radius:var(--radius-sm); background:#fef2f2; border:1.5px solid #fecaca; color:var(--accent2); font-size:12px; font-weight:600; cursor:pointer; text-decoration:none; transition:.15s; }
+  .delete-btn:hover { background:var(--accent2); color:white; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:var(--dim); grid-column:1/-1; }
+  .empty-icon { font-size:48px; margin-bottom:12px; }
+  .empty-text { font-size:14px; font-weight:500; }
+</style>
+
+<div class="page-wrap">
+
+  <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">🗂 Future Projects</div>
+      <div class="page-sub">Training, TESDA programs, and upcoming initiatives</div>
+    </div>
+    <a href="{% url 'project_create' %}" class="btn-new">＋ New Project</a>
+  </div>
+
+  <!-- STATUS TABS -->
+  <div class="tabs">
+    <span class="tab active" onclick="filterProjects('all',this)">All</span>
+    <span class="tab" onclick="filterProjects('Planned',this)">🟣 Planned</span>
+    <span class="tab" onclick="filterProjects('In Progress',this)">🔵 In Progress</span>
+    <span class="tab" onclick="filterProjects('Done',this)">🟢 Done</span>
+    <span class="tab" onclick="filterProjects('Cancelled',this)">🔴 Cancelled</span>
+  </div>
+
+  <!-- PROJECT GRID -->
+  <div class="project-grid" id="projectGrid">
+    {% for p in projects %}
+    <div class="project-card {{ p.status }}" data-status="{{ p.status }}">
+      <div class="project-status-row">
+        <span class="status-badge {{ p.status }}">{{ p.status }}</span>
+        {% if request.user.is_superuser %}
+        <a href="{% url 'project_delete' p.id %}" class="delete-btn" onclick="return confirm('Delete this project?')">🗑</a>
+        {% endif %}
+      </div>
+
+      <div>
+        <div class="project-title">{{ p.title }}</div>
+        {% if p.description %}<div class="project-desc">{{ p.description }}</div>{% endif %}
+      </div>
+
+      <div class="project-meta">
+        {% if p.provider %}
+        <div class="meta-row">🏫 <strong>{{ p.provider }}</strong></div>
+        {% endif %}
+        {% if p.target_date %}
+        <div class="meta-row">📅 <strong>{{ p.target_date|date:"M d, Y" }}</strong></div>
+        {% endif %}
+        {% if p.budget > 0 %}
+        <div class="meta-row">💰 <strong style="color:var(--accent3);">₱{{ p.budget|floatformat:2 }}</strong></div>
+        {% endif %}
+        <div class="meta-row">👤 {{ p.created_by.username }} · {{ p.created_at|date:"M d, Y" }}</div>
+      </div>
+
+      <!-- STATUS UPDATE -->
+      {% if p.status != 'Done' and p.status != 'Cancelled' %}
+      <form method="POST" action="{% url 'project_update_status' p.id %}" class="status-form" style="display:flex;gap:6px;">
+        {% csrf_token %}
+        <select name="status">
+          <option value="Planned"     {% if p.status == 'Planned' %}selected{% endif %}>🟣 Planned</option>
+          <option value="In Progress" {% if p.status == 'In Progress' %}selected{% endif %}>🔵 In Progress</option>
+          <option value="Done"        {% if p.status == 'Done' %}selected{% endif %}>🟢 Done</option>
+          <option value="Cancelled"   {% if p.status == 'Cancelled' %}selected{% endif %}>🔴 Cancelled</option>
+        </select>
+        <button type="submit">Update</button>
+      </form>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon">🗂</div>
+      <div class="empty-text">No projects yet. <a href="{% url 'project_create' %}" style="color:var(--accent);">Create your first project →</a></div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<script>
+function filterProjects(status, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.style.display = (status === 'all' || card.dataset.status === status) ? 'flex' : 'none';
+  });
+}
+</script>
+
+{% endblock %}

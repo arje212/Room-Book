@@ -1,0 +1,504 @@
+{% extends 'booking/base.html' %}
+{% block title %}Bookings Calendar{% endblock %}
+{% load custom_tags %}
+{% load static %}
+{% block content %}
+
+<style>
+/* GLOBAL */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to bottom right, #eef2ff, #f9fafb);
+  color: #374151;
+  line-height: 1.6;
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  border-radius: 0 1rem 1rem 0;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  padding: 1rem;
+}
+.sidebar a {
+  display: block;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  color: #374151;
+  font-weight: 500;
+  transition: 0.2s;
+}
+.sidebar a:hover {
+  background-color: #e0e7ff;
+  color: #4f46e5;
+}
+
+/* CALENDAR */
+.fc .fc-daygrid-event {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+.fc-toolbar-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e3a8a;
+}
+.fc .fc-button {
+  border-radius: 6px !important;
+  background: #e0e7ff !important;
+  color: #1e3a8a !important;
+  border: none !important;
+  font-weight: 600;
+  padding: 6px 12px;
+  transition: 0.2s;
+}
+.fc .fc-button:hover {
+  background: #c7d2fe !important;
+}
+
+/* TIMELINE */
+.timeline-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.timeline-table th, .timeline-table td {
+  border: 1px solid #e5e7eb;
+  padding: 6px;
+  text-align: center;
+}
+.timeline-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+.timeline-row {
+  height: 36px;
+  position: relative;
+}
+
+/* Sticky note styling */
+.timeline-booking {
+  position: absolute;
+  top: 4px;
+  min-width: 40px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.sticky-note-content {
+  width: 100%;
+  height: 100%;
+  color: #1f2937;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+  transform: rotate(-1deg);
+  animation: floatNote 4s ease-in-out infinite;
+}
+
+.timeline-booking:hover .sticky-note-content {
+  transform: scale(1.05) rotate(0deg);
+}
+
+.timeline-booking .pin {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: red;
+  border-radius: 50%;
+  top: -6px;
+  left: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+@keyframes floatNote {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50% { transform: translateY(-3px) rotate(1deg); }
+}
+
+/* LIVE CLOCK */
+#live-datetime {
+  background: linear-gradient(135deg, #4f46e5, #3b82f6);
+  color: white;
+  padding: 1.2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+#live-datetime .time {
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+#live-datetime .date {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* MODALS */
+#bookingFormModal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
+  z-index:200;
+  align-items:center;
+  justify-content:center;
+}
+#bookingFormModal .modal-content {
+  background:white;
+  padding:1.5rem;
+  border-radius:1rem;
+  width:90%;
+  max-width:1000px;
+  display:flex;
+  gap:1.5rem;
+  position:relative;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease;
+}
+.room-list {
+  width:35%;
+  max-height:600px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:0.75rem;
+}
+.room-card {
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  gap:0.5rem;
+  padding:0.75rem;
+  border:2px solid transparent;
+  border-radius:10px;
+  transition: all 0.2s;
+  background:#f9fafb;
+}
+.room-card:hover {
+  transform:scale(1.02);
+  border-color:#3b82f6;
+  background:#fff;
+}
+.room-card img {
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  border-radius:8px;
+}
+.room-card .font-semibold { text-align:center; }
+
+.room-details-panel {
+  width:65%;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+.room-details-panel img {
+  width:100%;
+  height:200px;
+  object-fit:cover;
+  border-radius:10px;
+}
+.book-room-btn {
+  background:#059669;
+  color:white;
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  text-align:center;
+  width:160px;
+  font-weight:600;
+  transition:0.2s;
+}
+.book-room-btn:hover { background:#047857; }
+
+.close-modal {
+  position:absolute;
+  top:8px;
+  right:8px;
+  cursor:pointer;
+  font-weight:700;
+  background:#dc2626;
+  color:white;
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  z-index:10;
+}
+
+/* FadeIn Animation */
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(10px); }
+  to { opacity:1; transform: translateY(0); }
+}
+</style>
+
+<header class="bg-indigo-900 text-gray-200 flex justify-between items-center px-6 py-3">
+  <div class="flex items-center space-x-4"><span class="font-semibold">Training Rooms</span></div>
+  <div class="flex items-center space-x-3">
+    <span class="text-gray-300 font-semibold">{{ request.user.username }}</span>
+    <a href="{% url 'logout' %}" class="bg-indigo-700 px-3 py-1 rounded">Logout</a>
+  </div>
+</header>
+
+<main class="flex h-screen overflow-hidden text-gray-700">
+  <!-- Sidebar -->
+  <aside class="sidebar w-64 bg-gray-100 p-4 flex flex-col space-y-6 overflow-y-auto">
+    <div id="live-datetime">
+      <div class="time" id="clock">00:00:00</div>
+      <div class="date" id="date">Loading date...</div>
+    </div>
+  </aside>
+
+  <!-- Main Section -->
+  <section class="flex-1 flex flex-col p-6 overflow-x-hidden">
+    <div class="flex justify-between items-center mb-3">
+      <h1 class="text-xl font-semibold text-gray-700">Bookings</h1>
+    </div>
+
+    <div class="grid grid-cols-12 gap-4">
+      <div class="col-span-12 lg:col-span-8">
+        <div class="bg-white rounded shadow p-4 mb-6"><div id="fc-calendar"></div></div>
+        <div class="bg-white rounded shadow p-4">
+          <h2 class="text-lg font-semibold mb-3">Hourly Timeline ({{ selected_date }})</h2>
+          <div class="overflow-x-auto">
+            <table class="timeline-table">
+              <thead>
+                <tr>
+                  <th>Room</th>
+                  {% for h in 0|to:23 %}<th>{{ h|stringformat:"02d" }}:00</th>{% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for rb in room_bookings %}
+                <tr class="timeline-row">
+                  <td class="room-name">{{ rb.room.name }}</td>
+                  <td colspan="24" style="position: relative;">
+                    {% for b in rb.bookings %}
+  {% with sh=b.start.hour sm=b.start.minute eh=b.end.hour em=b.end.minute %}
+    <div class="timeline-booking"
+         style="
+           left: calc((( {{ sh|default:0 }}*60 + {{ sm|default:0 }} ) / 1440 * 100%);
+           width: calc((( ({{ eh|default:0 }}*60 + {{ em|default:0 }} ) - ({{ sh|default:0 }}*60 + {{ sm|default:0 }})) / 1440 * 100%);
+         "
+         data-booking-id="{{ b.id }}"
+         data-room-name="{{ b.room.name }}"
+         data-created-by="{{ b.created_by.username }}"
+         data-attendees="{{ b.attendees }}"
+         data-room-image="{% if b.room.image %}{{ b.room.image.url }}{% else %}{% static 'img/placeholder.png' %}{% endif %}"
+         data-start="{{ b.start }}"
+         data-end="{{ b.end }}">
+         
+      <!-- Sticky Note -->
+      <div class="sticky-note" style="background: {{ b.created_by.profile.color }};">
+        <div class="pin"></div>
+        <div class="sticky-title">{{ b.title }}</div>
+        <div class="sticky-time">{{ b.start|date:"H:i" }} - {{ b.end|date:"H:i" }}</div>
+      </div>
+    </div>
+  {% endwith %}
+{% endfor %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <aside class="col-span-12 lg:col-span-4 space-y-4">
+        <div class="bg-white rounded shadow p-4">
+          <h2 class="text-lg font-semibold mb-3">Quick Actions</h2>
+          <div class="flex flex-col gap-3">
+            <a href="#" id="openNewBooking" class="bg-emerald-600 text-white px-4 py-2 rounded text-center font-semibold hover:bg-emerald-700 transition">
+              + New Booking
+            </a>
+            <a href="{% url 'trip_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded text-center font-semibold hover:bg-blue-700 transition">
+              + Add Trip/Schedule
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-white rounded shadow p-4">
+          <h2 class="text-lg font-semibold mb-2">Upcoming Trips</h2>
+          <ul class="space-y-2">
+            {% for t in trips %}
+              <li class="flex items-start gap-2">
+                <div class="w-2 h-2 rounded-full mt-2 bg-slate-600"></div>
+                <div>
+                  <div class="font-semibold">{{ t.destination }}</div>
+                  <div class="text-sm text-gray-500">{{ t.date }}</div>
+                  <div class="text-xs text-gray-500">{{ t.notes|default:'—' }}</div>
+                </div>
+              </li>
+            {% empty %}
+              <li class="text-gray-500">No upcoming trips.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<!-- Booking Form Modal -->
+<div id="bookingFormModal">
+  <div class="modal-content">
+    <button id="closeBookingFormModal" class="close-modal">X</button>
+    <div class="room-list">
+      {% for room in rooms %}
+        <div class="room-card"
+             data-room-id="{{ room.id }}"
+             data-room-name="{{ room.name }}"
+             data-capacity="{{ room.capacity }}"
+             data-projector="{{ room.projector }}"
+             data-speaker="{{ room.speaker }}"
+             data-tables="{{ room.tables }}"
+             data-chairs="{{ room.chairs }}"
+             data-image="{% if room.image %}{{ room.image.url }}{% else %}{% static 'img/placeholder.png' %}{% endif %}">
+          <img src="{% if room.image %}{{ room.image.url }}{% else %}{% static 'img/placeholder.png' %}{% endif %}" alt="{{ room.name }}">
+          <div class="font-semibold">{{ room.name }}</div>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="room-details-panel" id="roomDetailsPanel">
+      <h3>Select a room to see details</h3>
+      <img id="detailImage" src="{% static 'img/placeholder.png' %}" alt="Room Detail">
+      <p id="detailCapacity">Capacity: —</p>
+      <p id="detailProjector">Projector: —</p>
+      <p id="detailSpeaker">Speaker: —</p>
+      <p id="detailTables">Tables: —</p>
+      <p id="detailChairs">Chairs: —</p>
+      <div class="book-room-btn" id="bookRoomBtn" style="display:none;">Book This Room</div>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Details Modal -->
+<div id="bookingDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 max-w-lg relative">
+    <button id="closeBookingDetailsModal" class="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded">X</button>
+    <h2 class="text-xl font-semibold mb-2" id="detailTitle">Booking Details</h2>
+    <img id="detailRoomImage" src="" alt="Room Image" class="w-full h-48 object-contain mb-3 rounded">
+    <p><strong>Room:</strong> <span id="detailRoomName">—</span></p>
+    <p><strong>Booked By:</strong> <span id="detailBookedBy">—</span></p>
+    <p><strong>Attendees:</strong> <span id="detailAttendees">—</span></p>
+    <p><strong>Date:</strong> <span id="detailDate">—</span></p>
+    <p><strong>Time:</strong> <span id="detailTime">—</span></p>
+    <button id="cancelBookingBtn" class="bg-red-600 text-white px-4 py-2 rounded mt-3">Cancel This Booking</button>
+  </div>
+</div>
+
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+
+<script>
+// FullCalendar, clock, modals logic (same as your previous JS)
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('fc-calendar');
+  const bookingDetailsModal = document.getElementById('bookingDetailsModal');
+  const cancelBtn = document.getElementById('cancelBookingBtn');
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) { cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break; }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    height: 650,
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+    events: "{% url 'api_bookings' %}",
+    eventClick: function(info) {
+      const e = info.event.extendedProps;
+      document.getElementById('detailTitle').textContent = info.event.title;
+      document.getElementById('detailRoomImage').src = e.room_image || "{% static 'img/placeholder.png' %}";
+      document.getElementById('detailRoomName').textContent = e.room_name || '—';
+      document.getElementById('detailBookedBy').textContent = e.created_by || '—';
+      document.getElementById('detailAttendees').textContent = e.attendees || '—';
+      document.getElementById('detailDate').textContent = new Date(info.event.start).toLocaleDateString();
+      document.getElementById('detailTime').textContent =
+        info.event.start.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) +
+        ' - ' +
+        info.event.end.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      cancelBtn.dataset.bookingId = info.event.id;
+      bookingDetailsModal.classList.remove('hidden');
+      bookingDetailsModal.classList.add('flex');
+    }
+  });
+  calendar.render();
+
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById("clock").textContent = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    document.getElementById("date").textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  setInterval(updateClock, 1000); updateClock();
+
+  // Modals
+  const modal = document.getElementById('bookingFormModal');
+  const openModalBtn = document.getElementById('openNewBooking');
+  const closeModalBtn = document.getElementById('closeBookingFormModal');
+  openModalBtn.addEventListener('click', e => { e.preventDefault(); modal.style.display = 'flex'; });
+  closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
+  window.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+
+  const roomCards = modal.querySelectorAll('.room-card');
+  const roomDetailsPanel = document.getElementById('roomDetailsPanel');
+  const detailImage = document.getElementById('detailImage');
+  const bookBtn = document.getElementById('bookRoomBtn');
+
+  roomCards.forEach(card => {
+    card.addEventListener('click', () => {
+      roomCards.forEach(c => c.style.border='2px solid transparent');
+      card.style.border='2px solid #3b82f6';
+      detailImage.src = card.dataset.image || "{% static 'img/placeholder.png' %}";
+      roomDetailsPanel.querySelector('h3').textContent = card.dataset.roomName;
+      document.getElementById('detailCapacity').textContent = "Capacity: " + card.dataset.capacity;
+      document.getElementById('detailProjector').textContent = "Projector: " + card.dataset.projector;
+      document.getElementById('detailSpeaker').textContent = "Speaker: " + card.dataset.speaker;
+      document.getElementById('detailTables').textContent = "Tables: " + card.dataset.tables;
+      document.getElementById('detailChairs').textContent = "Chairs: " + card.dataset.chairs;
+      bookBtn.style.display = 'block';
+      bookBtn.onclick = () => { window.location.href = `/bookings/new/?room_id=${card.dataset.roomId}`; };
+    });
+  });
+
+  document.getElementById('closeBookingDetailsModal').addEventListener('click', () => {
+    bookingDetailsModal.classList.add('hidden');
+    bookingDetailsModal.classList.remove('flex');
+  });
+  window.addEventListener('click', e => { if (e.target === bookingDetailsModal) { bookingDetailsModal.classList.add('hidden'); bookingDetailsModal.classList.remove('flex'); } });
+
+  // Cancel booking
+  cancelBtn.addEventListener('click', function() {
+    const bookingId = cancelBtn.dataset.bookingId; if(!bookingId) return;
+    if(!confirm("Are you sure you want to cancel this booking?")) return;
+    fetch(`/cancel-booking/${bookingId}/`, { method: 'POST', headers:{'Content-Type':'application/json','X-CSRFToken':csrftoken}, body: JSON.stringify({}) })
+      .then(res => { if(res.ok){ const event = calendar.getEventById(bookingId); if(event) event.remove(); const timelineBooking = document.querySelector(`.timeline-booking[data-booking-id='${bookingId}']`); if(timelineBooking) timelineBooking.remove(); bookingDetailsModal.classList.add('hidden'); bookingDetailsModal.classList.remove('flex'); alert("Booking cancelled!"); } else { alert("Failed to cancel booking."); } })
+      .catch(err => { console.error(err); alert("Error cancelling booking."); });
+  });
+
+});
+</script>
+
+{% endblock %}

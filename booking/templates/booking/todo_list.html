@@ -1,0 +1,245 @@
+{% extends 'booking/base.html' %}
+{% block title %}My Tasks{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  :root {
+    --bg:#f8fafc; --surface:#fff; --surface2:#f1f5f9; --border:#e2e8f0;
+    --accent:#4f46e5; --accent2:#ef4444; --accent3:#10b981; --warn:#f59e0b;
+    --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
+    --shadow:0 1px 6px rgba(0,0,0,.06); --shadow-md:0 4px 20px rgba(0,0,0,.08);
+    --radius:14px; --radius-sm:8px;
+  }
+  body { font-family:'DM Sans',sans-serif!important; background:var(--bg)!important; color:var(--text)!important; min-height:100vh!important; }
+
+  /* PAGE LAYOUT */
+  .page-wrap { max-width:800px; margin:0 auto; padding:32px 20px; display:flex; flex-direction:column; gap:24px; }
+
+  /* BACK LINK */
+  .back-link { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--muted); text-decoration:none; font-weight:500; transition:.15s; }
+  .back-link:hover { color:var(--accent); }
+
+  /* HEADER */
+  .page-header { display:flex; align-items:center; justify-content:space-between; }
+  .page-title { font-size:24px; font-weight:700; color:var(--text); letter-spacing:-.5px; }
+  .page-sub { font-size:13px; color:var(--muted); margin-top:4px; }
+
+  /* ADD FORM */
+  .add-card {
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:var(--radius); padding:20px 24px;
+    box-shadow:var(--shadow); position:relative; overflow:hidden;
+  }
+  .add-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--warn),#d97706); }
+  .add-title { font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:14px; }
+  .add-grid { display:grid; grid-template-columns:1fr 130px 130px; gap:10px; margin-bottom:10px; }
+  .add-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.7px; }
+  .form-input,.form-select {
+    width:100%; background:var(--surface2); border:1.5px solid var(--border);
+    border-radius:var(--radius-sm); padding:9px 12px; font-size:13px;
+    font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:.2s;
+  }
+  .form-input:focus,.form-select:focus { border-color:var(--warn); box-shadow:0 0 0 3px rgba(245,158,11,.1); background:white; }
+  .textarea { resize:vertical; min-height:70px; }
+  .btn-add {
+    width:100%; padding:11px; background:linear-gradient(135deg,var(--warn),#d97706);
+    color:white; border:none; border-radius:var(--radius-sm);
+    font-size:14px; font-weight:700; font-family:'DM Sans',sans-serif;
+    cursor:pointer; transition:.2s;
+  }
+  .btn-add:hover { opacity:.9; box-shadow:0 4px 16px rgba(245,158,11,.3); }
+
+  /* FILTERS */
+  .filters { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .filter-btn {
+    padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;
+    border:1.5px solid var(--border); background:var(--surface); color:var(--muted);
+    cursor:pointer; transition:.15s;
+  }
+  .filter-btn.active,.filter-btn:hover { border-color:var(--accent); color:var(--accent); background:#eef2ff; }
+
+  /* STATS */
+  .stats { display:flex; gap:12px; }
+  .stat-chip { padding:5px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+  .stat-total  { background:var(--surface2); color:var(--muted); border:1.5px solid var(--border); }
+  .stat-done   { background:#d1fae5; color:#059669; border:1.5px solid #a7f3d0; }
+  .stat-pending{ background:#fef9c3; color:#b45309; border:1.5px solid #fde68a; }
+
+  /* TODO LIST */
+  .todo-list { display:flex; flex-direction:column; gap:8px; }
+  .todo-card {
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:var(--radius-sm); padding:14px 16px;
+    display:flex; align-items:flex-start; gap:12px;
+    box-shadow:var(--shadow); transition:.2s; position:relative;
+  }
+  .todo-card:hover { box-shadow:var(--shadow-md); }
+  .todo-card.done-card { opacity:.6; }
+  .todo-card.done-card .todo-card-title { text-decoration:line-through; color:var(--dim); }
+
+  /* Priority left bar */
+  .todo-card.prio-High   { border-left:4px solid #ef4444; }
+  .todo-card.prio-Medium { border-left:4px solid #f59e0b; }
+  .todo-card.prio-Low    { border-left:4px solid #10b981; }
+
+  /* Check */
+  .check-form { margin:0; }
+  .check-btn {
+    width:20px; height:20px; border-radius:5px; border:2px solid var(--border);
+    background:white; cursor:pointer; transition:.2s; flex-shrink:0; margin-top:1px;
+    display:flex; align-items:center; justify-content:center; font-size:11px;
+  }
+  .check-btn.done-check { background:var(--accent3); border-color:var(--accent3); color:white; }
+
+  .todo-body { flex:1; min-width:0; }
+  .todo-card-title { font-size:14px; font-weight:600; color:var(--text); margin-bottom:3px; }
+  .todo-card-note { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:6px; }
+  .todo-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .prio-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; text-transform:uppercase; letter-spacing:.5px; }
+  .prio-badge.High   { background:#fee2e2; color:#dc2626; }
+  .prio-badge.Medium { background:#fef9c3; color:#b45309; }
+  .prio-badge.Low    { background:#d1fae5; color:#059669; }
+  .due-date { font-size:11px; color:var(--dim); display:flex; align-items:center; gap:4px; }
+  .due-date.overdue { color:var(--accent2); font-weight:600; }
+
+  .delete-form { margin:0; }
+  .delete-btn {
+    padding:5px 9px; border-radius:6px; border:1.5px solid #fecaca;
+    background:#fef2f2; color:var(--accent2); cursor:pointer;
+    font-size:11px; font-weight:600; transition:.15s; flex-shrink:0;
+  }
+  .delete-btn:hover { background:var(--accent2); color:white; }
+
+  .empty-state { text-align:center; padding:40px 20px; color:var(--dim); }
+  .empty-icon { font-size:40px; margin-bottom:10px; }
+  .empty-text { font-size:14px; font-weight:500; }
+</style>
+
+<div class="page-wrap">
+
+  <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">✅ My Tasks</div>
+      <div class="page-sub">Personal to-do list — {{ request.user.username }}</div>
+    </div>
+    <div class="stats">
+      <span class="stat-chip stat-total">{{ todos|length }} total</span>
+      <span class="stat-chip stat-done">{{ todos|dictsort:"is_done"|last|yesno:"0,0" }} done</span>
+    </div>
+  </div>
+
+  <!-- ADD TASK FORM -->
+  <div class="add-card">
+    <div class="add-title">Add New Task</div>
+    <form method="POST" action="{% url 'todo_create' %}">
+      {% csrf_token %}
+      <div class="add-grid">
+        <div class="form-group">
+          <label class="form-label">Task Title *</label>
+          <input type="text" name="title" class="form-input" placeholder="e.g. Prepare training materials" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select name="priority" class="form-select">
+            <option value="High">🔴 High</option>
+            <option value="Medium" selected>🟡 Medium</option>
+            <option value="Low">🟢 Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date</label>
+          <input type="date" name="due_date" class="form-input">
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div class="form-group">
+          <label class="form-label">Note (optional)</label>
+          <textarea name="note" class="form-input textarea" placeholder="Additional details…"></textarea>
+        </div>
+      </div>
+      <button type="submit" class="btn-add">＋ Add Task</button>
+    </form>
+  </div>
+
+  <!-- FILTER -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div class="filters">
+      <span class="filter-btn active" onclick="filterTodos('all',this)">All</span>
+      <span class="filter-btn" onclick="filterTodos('pending',this)">Pending</span>
+      <span class="filter-btn" onclick="filterTodos('done',this)">Done</span>
+      <span class="filter-btn" onclick="filterTodos('High',this)">🔴 High</span>
+      <span class="filter-btn" onclick="filterTodos('Medium',this)">🟡 Medium</span>
+      <span class="filter-btn" onclick="filterTodos('Low',this)">🟢 Low</span>
+    </div>
+  </div>
+
+  <!-- TASK LIST -->
+  <div class="todo-list" id="todoList">
+    {% for todo in todos %}
+    {% with today=today %}
+    <div class="todo-card prio-{{ todo.priority }} {% if todo.is_done %}done-card{% endif %}"
+         data-done="{{ todo.is_done|yesno:'true,false' }}"
+         data-priority="{{ todo.priority }}">
+      <!-- Toggle done -->
+      <form method="POST" action="{% url 'todo_toggle' todo.id %}" class="check-form">
+        {% csrf_token %}
+        <button type="submit" class="check-btn {% if todo.is_done %}done-check{% endif %}">
+          {% if todo.is_done %}✓{% endif %}
+        </button>
+      </form>
+
+      <div class="todo-body">
+        <div class="todo-card-title">{{ todo.title }}</div>
+        {% if todo.note %}<div class="todo-card-note">{{ todo.note }}</div>{% endif %}
+        <div class="todo-meta">
+          <span class="prio-badge {{ todo.priority }}">{{ todo.priority }}</span>
+          {% if todo.due_date %}
+          <span class="due-date">📅 Due {{ todo.due_date }}</span>
+          {% endif %}
+          <span style="font-size:11px;color:var(--dim);">Added {{ todo.created_at|date:"M d" }}</span>
+        </div>
+      </div>
+
+      <!-- Delete -->
+      <form method="POST" action="{% url 'todo_delete' todo.id %}" class="delete-form">
+        {% csrf_token %}
+        <button type="submit" class="delete-btn" onclick="return confirm('Delete this task?')">🗑</button>
+      </form>
+    </div>
+    {% endwith %}
+    {% empty %}
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">No tasks yet! Add your first task above.</div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<script>
+function filterTodos(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.todo-card').forEach(card => {
+    const done = card.dataset.done === 'true';
+    const prio = card.dataset.priority;
+    let show = false;
+    if (filter === 'all')    show = true;
+    else if (filter === 'pending') show = !done;
+    else if (filter === 'done')    show = done;
+    else show = prio === filter;
+    card.style.display = show ? 'flex' : 'none';
+  });
+}
+</script>
+
+{% endblock %}
